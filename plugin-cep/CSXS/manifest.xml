@@ -3,7 +3,7 @@
   Version="7.0"
   ExtensionBundleId="com.textadjust.cep"
   ExtensionBundleVersion="0.1.0"
-  ExtensionBundleName="文本批量调整"
+  ExtensionBundleName="批量调整工具"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
   <ExtensionList>
@@ -35,14 +35,14 @@
         </Lifecycle>
         <UI>
           <Type>Panel</Type>
-          <Menu>文本批量调整</Menu>
+          <Menu>批量调整工具</Menu>
           <Geometry>
             <Size>
-              <Width>480</Width>
+              <Width>600</Width>
               <Height>860</Height>
             </Size>
             <MinSize>
-              <Width>340</Width>
+              <Width>520</Width>
               <Height>500</Height>
             </MinSize>
             <MaxSize>
