@@ -1,0 +1,8 @@
+# 安装程序生成的调试标记
+plugin-cep/.debug
+
+# 已安装到 CEP 扩展目录的目录联接不会出现在仓库内
+# 常见临时文件
+*.tmp
+Thumbs.db
+desktop.ini

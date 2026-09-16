@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>文本批量调整</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <span class="title">文本批量调整</span>
+        <button id="btnScan" class="btn primary">扫描 / 刷新</button>
+      </header>
+
+      <div class="doc-bar"><span id="docName" class="doc-name">未打开文档</span></div>
+
+      <!-- 筛选 -->
+      <section class="section filters">
+        <div class="filters-grid">
+          <div class="fcell span8">
+            <span class="flabel">关键字</span>
+            <input id="fSearch" class="input grow" type="text" placeholder="搜索图层名称或文字内容…" />
+          </div>
+
+          <div class="fcell span3">
+            <span class="flabel">字体</span>
+            <select id="fFontMode" class="select grow-min">
+              <option value="include">包含</option>
+              <option value="exclude">排除</option>
+            </select>
+            <button id="btnToggleFonts" class="btn tiny">选择</button>
+            <span id="fontCount" class="muted small">全部</span>
+          </div>
+          <div class="fcell span2">
+            <span class="flabel">颜色</span>
+            <select id="fColorMode" class="select grow-min">
+              <option value="any">不限</option>
+              <option value="eq">匹配</option>
+              <option value="neq">排除</option>
+            </select>
+            <span id="fColorSwatch" class="color-swatch" title="点击选择颜色"></span>
+          </div>
+          <div class="fcell span3">
+            <span class="flabel">容差</span>
+            <input id="fColorTol" class="cp-range" type="range" min="0" max="100" value="0" />
+            <input id="fColorTolNum" class="input xtol" type="text" value="0" />
+          </div>
+
+          <div id="fontBox" class="font-box hidden span8">
+            <div class="font-box-tools">
+              <button id="btnFontAll" class="btn tiny">全选</button>
+              <button id="btnFontNone" class="btn tiny">清空</button>
+            </div>
+            <div id="fontList" class="font-list"></div>
+          </div>
+
+          <div class="fcell span2 filter-field filter-size">
+            <span class="flabel">字号</span>
+            <div class="filter-size-range">
+              <input id="fSizeMin" class="input xxs" type="text" placeholder="最小" />
+              <span class="sep">~</span>
+              <input id="fSizeMax" class="input xxs" type="text" placeholder="最大" />
+            </div>
+          </div>
+          <div class="fcell span2 filter-field">
+            <span class="flabel">粗体</span>
+            <select id="fBold" class="select grow-min">
+              <option value="any">不限</option>
+              <option value="yes">加粗</option>
+              <option value="no">非粗</option>
+            </select>
+          </div>
+          <div class="fcell span2 filter-field">
+            <span class="flabel">斜体</span>
+            <select id="fItalic" class="select grow-min">
+              <option value="any">不限</option>
+              <option value="yes">斜体</option>
+              <option value="no">非斜</option>
+            </select>
+          </div>
+          <div class="fcell span2 filter-field">
+            <span class="flabel">可见</span>
+            <select id="fVisible" class="select grow-min">
+              <option value="any">不限</option>
+              <option value="yes">可见</option>
+              <option value="no">隐藏</option>
+            </select>
+          </div>
+
+          <div class="fcell span8">
+            <button id="btnResetFilters" class="btn small">重置全部筛选</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 列表 -->
+      <section class="section list-section">
+        <div class="list-toolbar">
+          <div class="list-toolbar-info">
+            <span id="listCount" class="count">匹配 0 / 共 0</span>
+            <label class="list-size-control" title="调整图层列表的行高">
+              <span>行高</span>
+              <input id="listRowHeight" class="list-size-slider" type="range" min="26" max="70" value="42" />
+              <output id="listRowHeightValue">42</output>
+            </label>
+          </div>
+          <div class="toolbar-actions">
+            <button id="btnSelectAll" class="btn small">全选</button>
+            <button id="btnInvert" class="btn small">反选</button>
+            <button id="btnClearSel" class="btn small">清空</button>
+            <button id="btnSelectInPs" class="btn small" title="在 Photoshop 图层面板中选中当前列表选中项">选中</button>
+          </div>
+        </div>
+        <div id="layerList" class="layer-list"></div>
+      </section>
+
+      <!-- 批量修改 -->
+      <section class="section editor">
+        <div class="section-head">
+          <span class="section-title">批量修改</span>
+          <button id="btnToggleEditor" class="btn tiny">收起</button>
+        </div>
+
+        <div id="editorBody">
+          <div class="editor-row">
+            <div class="field font-field">
+              <span class="field-label">字体</span>
+              <select id="eFont" class="select grow"></select>
+              <span class="field-inline-label">样式</span>
+              <select id="eFontStyle" class="select batch-font-style" disabled></select>
+              <button id="btnClearFont" class="btn small">清除</button>
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="field">
+              <span class="field-label">字号</span>
+              <select id="eSizeMode" class="select compact">
+                <option value="none">不修改</option>
+                <option value="absolute">固定值</option>
+                <option value="scale">按比例</option>
+              </select>
+              <input id="eSize" class="input num stretch" type="text" placeholder="—" />
+            </div>
+            <div class="field">
+              <span class="field-label">颜色</span>
+              <select id="eColorMode" class="select compact">
+                <option value="none">不修改</option>
+                <option value="set">设为</option>
+              </select>
+              <input id="eColor" class="color-input" type="color" value="#000000" />
+              <span id="eColorHex" class="muted">#000000</span>
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="field">
+              <span class="field-label">粗体</span>
+              <select id="eBold" class="select compact">
+                <option value="keep">不变</option>
+                <option value="on">开</option>
+                <option value="off">关</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">斜体</span>
+              <select id="eItalic" class="select compact">
+                <option value="keep">不变</option>
+                <option value="on">开</option>
+                <option value="off">关</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">下划线</span>
+              <select id="eUnderline" class="select compact">
+                <option value="keep">不变</option>
+                <option value="on">开</option>
+                <option value="off">关</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">删除线</span>
+              <select id="eStrike" class="select compact">
+                <option value="keep">不变</option>
+                <option value="on">开</option>
+                <option value="off">关</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="field">
+              <span class="field-label">大小写</span>
+              <select id="eCaps" class="select compact">
+                <option value="keep">不变</option>
+                <option value="normal">正常</option>
+                <option value="allcaps">全大写</option>
+                <option value="smallcaps">小型大写</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">基线</span>
+              <select id="eBaseline" class="select compact">
+                <option value="keep">不变</option>
+                <option value="normal">正常</option>
+                <option value="subscript">下标</option>
+                <option value="superscript">上标</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">偏移</span>
+              <input id="eBaselineShift" class="input num stretch" type="text" placeholder="0" />
+            </div>
+            <div class="field">
+              <span class="field-label">内容</span>
+              <select id="eTextCase" class="select compact">
+                <option value="keep">不变</option>
+                <option value="upper">大写</option>
+                <option value="lower">小写</option>
+                <option value="title">标题</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="field">
+              <span class="field-label">字距</span>
+              <input id="eTracking" class="input num stretch" type="text" placeholder="0" />
+            </div>
+            <div class="field">
+              <span class="field-label">行距</span>
+              <input id="eLeading" class="input num stretch" type="text" placeholder="0" />
+            </div>
+            <div class="field">
+              <span class="field-label">水平%</span>
+              <input id="eHScale" class="input num stretch" type="text" placeholder="100" />
+            </div>
+            <div class="field">
+              <span class="field-label">垂直%</span>
+              <input id="eVScale" class="input num stretch" type="text" placeholder="100" />
+            </div>
+          </div>
+
+          <div class="editor-row">
+            <div class="field">
+              <span class="field-label">消锯齿</span>
+              <select id="eAntiAlias" class="select compact">
+                <option value="keep">不变</option>
+                <option value="none">无</option>
+                <option value="sharp">锐利</option>
+                <option value="crisp">清晰</option>
+                <option value="smooth">平滑</option>
+                <option value="strong">强力</option>
+              </select>
+            </div>
+            <div class="field">
+              <span class="field-label">自动字距</span>
+              <select id="eKerning" class="select compact">
+                <option value="keep">不变</option>
+                <option value="metrics">度量标准</option>
+                <option value="optical">视觉</option>
+                <option value="manual">手动</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 常驻底栏：始终可见 -->
+      <div class="apply-bar">
+        <span id="applyInfo" class="muted">已选中 0 个图层</span>
+        <button id="btnApply" class="btn primary">应用到选中项</button>
+      </div>
+      <div class="log-toggle-row">
+        <button id="btnToggleLog" class="btn tiny">调试输出</button>
+      </div>
+      <div id="logBox" class="log-box hidden"></div>
+
+      <footer class="status-bar"><span id="status">就绪</span></footer>
+    </div>
+
+    <!-- 颜色选择弹层（RGB / HSV） -->
+    <div id="colorModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="modal-head">
+          <span>选择颜色</span>
+          <button id="cpClose" class="btn tiny">关闭</button>
+        </div>
+        <div id="cpSV" class="cp-sv">
+          <div id="cpCursor" class="cp-cursor"></div>
+        </div>
+        <input id="cpHue" class="cp-hue" type="range" min="0" max="360" value="0" />
+        <div class="cp-preview-row">
+          <span id="cpPreview" class="cp-preview"></span>
+          <input id="cpHex" class="input cp-hex" type="text" value="#FFFFFF" />
+          <div class="cp-modes">
+            <button id="cpModeRGB" class="btn tiny selected">RGB</button>
+            <button id="cpModeHSV" class="btn tiny">HSV</button>
+          </div>
+        </div>
+        <div id="cpRGB" class="cp-fields">
+          <label class="cp-field"><input id="cpR" class="input num" type="text" /><span>R</span></label>
+          <label class="cp-field"><input id="cpG" class="input num" type="text" /><span>G</span></label>
+          <label class="cp-field"><input id="cpB" class="input num" type="text" /><span>B</span></label>
+        </div>
+        <div id="cpHSV" class="cp-fields hidden">
+          <label class="cp-field"><input id="cpH" class="input num" type="text" /><span>H</span></label>
+          <label class="cp-field"><input id="cpS" class="input num" type="text" /><span>S</span></label>
+          <label class="cp-field"><input id="cpV" class="input num" type="text" /><span>V</span></label>
+        </div>
+        <div class="cp-actions">
+          <button id="cpCancel" class="btn small">取消</button>
+          <button id="cpOK" class="btn primary small">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
