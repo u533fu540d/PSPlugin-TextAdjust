@@ -678,6 +678,48 @@ function TA_undo() {
   return taJsonStringify(result);
 }
 
+/* 记录操作前的历史状态，撤销时整体回退 */
+var taHistoryAnchor = null;
+
+function TA_markHistoryAnchor() {
+  var result = { ok: false, count: -1, error: null };
+  try {
+    var doc = app.activeDocument;
+    taHistoryAnchor = doc.activeHistoryState;
+    result.count = doc.historyStates.length;
+    result.ok = true;
+  } catch (e) {
+    result.error = String(e.message || e);
+  }
+  return taJsonStringify(result);
+}
+
+function TA_undoBatchHistory() {
+  var result = { ok: false, steps: 0, method: "", error: null };
+  try {
+    var doc = app.activeDocument;
+    if (taHistoryAnchor) {
+      doc.activeHistoryState = taHistoryAnchor;
+      result.ok = true;
+      result.method = "anchor";
+    }
+  } catch (e) {
+    result.error = String(e.message || e);
+  }
+  if (!result.ok && !result.error) {
+    try {
+      executeAction(charIDToTypeID("undo"), undefined, DialogModes.NO);
+      result.ok = true;
+      result.steps = 1;
+      result.method = "undo";
+    } catch (e2) {
+      result.error = String(e2.message || e2);
+    }
+  }
+  taHistoryAnchor = null;
+  return taJsonStringify(result);
+}
+
 function TA_selectLayers(idsCsv) {
   var result = { ok: 0, failed: 0, errors: [] };
   try {

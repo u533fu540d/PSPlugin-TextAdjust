@@ -207,7 +207,7 @@
   var fontDrag = { active: false, mode: true, lastFont: null };
   var imageRowEls = {};
   var imageDrag = { active: false, mode: true, lastId: null };
-  var lastOperation = { mode: "", ids: [] };
+  var lastOperation = { mode: "", ids: [], anchorMarked: false };
   var fontCacheKey = "ta-font-cache-v1";
 
   function documentCacheKey(cacheKey) {
@@ -1697,13 +1697,13 @@
       log("--- 应用结束 ---");
 
       taskEnd();
-      lastOperation = { mode: "text", ids: completedIds };
+      lastOperation = { mode: "text", ids: completedIds, anchorMarked: true };
       mergeLayerSnapshots(state.layers, combined.layers);
       renderList();
       if (combined.ok) markDocumentChanged();
       saveDocumentCache();
     }
-    runBatch(0);
+    evalScript("TA_markHistoryAnchor()", function () { runBatch(0); });
   }
 
   function selectLayersInPhotoshop() {
@@ -1813,13 +1813,13 @@
       log(message);
       for (var i = 0; i < combined.errors.length; i++) log("  ✗ " + combined.errors[i]);
       taskEnd();
-      lastOperation = { mode: "image", ids: completedIds };
+      lastOperation = { mode: "image", ids: completedIds, anchorMarked: true };
       mergeLayerSnapshots(state.images, combined.layers);
       renderImageList();
       if (combined.ok) markDocumentChanged();
       saveDocumentCache();
     }
-    runBatch(0);
+    evalScript("TA_markHistoryAnchor()", function () { runBatch(0); });
   }
 
   function selectImagesInPhotoshop() {
@@ -1908,7 +1908,8 @@
     taskStart("撤销上一轮修改", "正在恢复 Photoshop 文档状态，期间请勿操作 Photoshop。");
     taskUpdate(0, 1);
     setStatus("正在撤销上一轮修改…");
-    evalScript("TA_undo()", function (res) {
+    var undoScript = lastOperation.anchorMarked ? "TA_undoBatchHistory()" : "TA_undo()";
+    evalScript(undoScript, function (res) {
       if (res === "__NO_CEP__") {
         setStatus("未检测到 CEP 环境");
         taskEnd();
