@@ -2079,7 +2079,19 @@
         state.cacheKey = meta.cacheKey || state.cacheKey;
         state.fingerprint = meta.fingerprint || state.fingerprint;
         state.docName = meta.docName || "";
+        // 刷新会重新生成不含主色的快照，按图层 ID 保留已提取的主色。
+        var previousColors = {};
+        for (var pi = 0; pi < state.images.length; pi++) {
+          if (state.images[pi].colorAvailable) previousColors[state.images[pi].id] = state.images[pi];
+        }
         state.images = collected;
+        for (var nj = 0; nj < state.images.length; nj++) {
+          var kept = previousColors[state.images[nj].id];
+          if (kept && !state.images[nj].empty) {
+            state.images[nj].colorHex = kept.colorHex;
+            state.images[nj].colorAvailable = true;
+          }
+        }
         var alive = {};
         for (var i = 0; i < state.images.length; i++) alive[state.images[i].id] = true;
         var next = {};
