@@ -188,6 +188,8 @@
     },
     imageFilters: {
       search: "",
+      typeMode: "include",
+      types: [],
       widthMin: "",
       widthMax: "",
       heightMin: "",
@@ -247,6 +249,7 @@
       $("docName").textContent = state.docName || "未打开文档";
       renderFontFilter();
       renderList();
+      renderImageTypeFilter();
       renderImageList();
       setStatus("已恢复文档缓存：文本 " + state.layers.length + " 个，图片 " + state.images.length + " 个");
       log("已恢复缓存（" + new Date(cached.savedAt || Date.now()).toLocaleString() + "）");
@@ -974,6 +977,7 @@
 
   function readImageFilters() {
     state.imageFilters.search = $("iSearch").value;
+    state.imageFilters.typeMode = $("iTypeMode").value;
     state.imageFilters.widthMin = $("iWidthMin").value;
     state.imageFilters.widthMax = $("iWidthMax").value;
     state.imageFilters.heightMin = $("iHeightMin").value;
@@ -985,6 +989,11 @@
 
   function matchImage(layer, f) {
     if (f.search && String(layer.name || "").toLowerCase().indexOf(f.search.toLowerCase()) === -1) return false;
+    if (f.types && f.types.length) {
+      var typeHit = f.types.indexOf(layer.type || "raster") !== -1;
+      if (f.typeMode === "include" && !typeHit) return false;
+      if (f.typeMode === "exclude" && typeHit) return false;
+    }
     var wMin = f.widthMin === "" ? null : parseFloat(f.widthMin);
     var wMax = f.widthMax === "" ? null : parseFloat(f.widthMax);
     var hMin = f.heightMin === "" ? null : parseFloat(f.heightMin);
@@ -1019,6 +1028,78 @@
       if (matchImage(state.images[i], state.imageFilters)) out.push(state.images[i]);
     }
     return out;
+  }
+
+  function imageTypeLabel(type) {
+    if (type === "smartObject") return "智能对象";
+    if (type === "shape") return "形状";
+    if (type === "video") return "视频图层";
+    if (type === "text") return "文本";
+    if (type === "adjustment") return "调整图层";
+    return "像素图层";
+  }
+
+  function imageTypeOrder(type) {
+    var order = { raster: 1, smartObject: 2, shape: 3, adjustment: 4, video: 5, text: 6 };
+    return order[type] || 99;
+  }
+
+  function imageTypesFromLayers() {
+    var seen = {};
+    var list = [];
+    for (var i = 0; i < state.images.length; i++) {
+      var type = state.images[i].type || "raster";
+      if (seen[type]) continue;
+      seen[type] = true;
+      list.push(type);
+    }
+    list.sort(function (a, b) { return imageTypeOrder(a) - imageTypeOrder(b) || imageTypeLabel(a).localeCompare(imageTypeLabel(b)); });
+    return list;
+  }
+
+  function setImageTypeSelected(type, selected) {
+    var arr = state.imageFilters.types;
+    var idx = arr.indexOf(type);
+    if (selected && idx === -1) arr.push(type);
+    if (!selected && idx !== -1) arr.splice(idx, 1);
+  }
+
+  function updateImageTypeCount() {
+    var n = state.imageFilters.types.length;
+    $("imageTypeCount").textContent = n ? n + " 已选" : "全部";
+  }
+
+  function renderImageTypeFilter() {
+    var host = $("imageTypeList");
+    host.innerHTML = "";
+    var types = imageTypesFromLayers();
+    var valid = [];
+    for (var i = 0; i < state.imageFilters.types.length; i++) {
+      if (types.indexOf(state.imageFilters.types[i]) !== -1) valid.push(state.imageFilters.types[i]);
+    }
+    state.imageFilters.types = valid;
+    if (!types.length) {
+      host.innerHTML = '<div class="empty-hint">当前文档未发现图片图层类型</div>';
+      updateImageTypeCount();
+      return;
+    }
+    for (var j = 0; j < types.length; j++) {
+      (function (type) {
+        var item = document.createElement("div");
+        item.className = "font-item" + (state.imageFilters.types.indexOf(type) !== -1 ? " selected" : "");
+        item.dataset.type = type;
+        item.textContent = imageTypeLabel(type);
+        item.addEventListener("mousedown", function (ev) {
+          if (ev.button !== 0) return;
+          ev.preventDefault();
+          setImageTypeSelected(type, state.imageFilters.types.indexOf(type) === -1);
+          renderImageTypeFilter();
+          renderImageList();
+        });
+        host.appendChild(item);
+      })(types[j]);
+    }
+    updateImageTypeCount();
   }
 
   function renderImageList() {
@@ -2009,6 +2090,7 @@
         state.imageSelected = next;
       }
       $("docName").textContent = state.docName || "未打开文档";
+      renderImageTypeFilter();
       renderImageList();
       setStatus(data.error ? data.error : "文档「" + state.docName + "」：共 " + state.images.length + " 个图片图层");
       saveDocumentCache();
@@ -2123,6 +2205,20 @@
     ["iSearch", "iWidthMin", "iWidthMax", "iHeightMin", "iHeightMax"].forEach(function (id) {
       $(id).addEventListener("input", renderImageList);
     });
+    $("iTypeMode").addEventListener("change", renderImageList);
+    $("btnToggleImageTypes").addEventListener("click", function () {
+      $("imageTypeBox").classList.toggle("hidden");
+    });
+    $("btnImageTypeAll").addEventListener("click", function () {
+      state.imageFilters.types = imageTypesFromLayers();
+      renderImageTypeFilter();
+      renderImageList();
+    });
+    $("btnImageTypeNone").addEventListener("click", function () {
+      state.imageFilters.types = [];
+      renderImageTypeFilter();
+      renderImageList();
+    });
     $("iColorMode").addEventListener("change", function () {
       if (ensureImageColorsForFilter()) return;
       renderImageList();
@@ -2192,11 +2288,14 @@
       $("iWidthMax").value = "";
       $("iHeightMin").value = "";
       $("iHeightMax").value = "";
+      $("iTypeMode").value = "include";
+      state.imageFilters.types = [];
       $("iColorMode").value = "any";
       $("iColorTol").value = "0";
       $("iColorTolNum").value = "0";
       state.imageFilters.colorHex = "#FFFFFF";
       renderImageColorSwatch();
+      renderImageTypeFilter();
       renderImageList();
     });
     $("btnExtractImageColors").addEventListener("click", function () {

@@ -293,21 +293,14 @@
               <input id="iSearch" class="input grow" type="text" placeholder="搜索图片图层名称…" />
             </div>
 
-            <div class="fcell span2 filter-field filter-size">
-              <span class="flabel">宽度</span>
-              <div class="filter-size-range">
-                <input id="iWidthMin" class="input xxs" type="text" placeholder="最小" />
-                <span class="sep">~</span>
-                <input id="iWidthMax" class="input xxs" type="text" placeholder="最大" />
-              </div>
-            </div>
-            <div class="fcell span2 filter-field filter-size">
-              <span class="flabel">高度</span>
-              <div class="filter-size-range">
-                <input id="iHeightMin" class="input xxs" type="text" placeholder="最小" />
-                <span class="sep">~</span>
-                <input id="iHeightMax" class="input xxs" type="text" placeholder="最大" />
-              </div>
+            <div class="fcell span3">
+              <span class="flabel">类型</span>
+              <select id="iTypeMode" class="select grow-min">
+                <option value="include">包含</option>
+                <option value="exclude">排除</option>
+              </select>
+              <button id="btnToggleImageTypes" class="btn tiny">选择</button>
+              <span id="imageTypeCount" class="muted small">全部</span>
             </div>
             <div class="fcell span2">
               <span class="flabel">主色</span>
@@ -318,10 +311,35 @@
               </select>
               <span id="iColorSwatch" class="color-swatch" title="点击选择颜色"></span>
             </div>
-            <div class="fcell span2">
+            <div class="fcell span3">
               <span class="flabel">容差</span>
               <input id="iColorTol" class="cp-range" type="range" min="0" max="100" value="0" />
               <input id="iColorTolNum" class="input xtol" type="text" value="0" />
+            </div>
+
+            <div id="imageTypeBox" class="font-box hidden span8">
+              <div class="font-box-tools">
+                <button id="btnImageTypeAll" class="btn tiny">全选</button>
+                <button id="btnImageTypeNone" class="btn tiny">清空</button>
+              </div>
+              <div id="imageTypeList" class="font-list"></div>
+            </div>
+
+            <div class="fcell span4 filter-field filter-size">
+              <span class="flabel">宽度</span>
+              <div class="filter-size-range">
+                <input id="iWidthMin" class="input xxs" type="text" placeholder="最小" />
+                <span class="sep">~</span>
+                <input id="iWidthMax" class="input xxs" type="text" placeholder="最大" />
+              </div>
+            </div>
+            <div class="fcell span4 filter-field filter-size">
+              <span class="flabel">高度</span>
+              <div class="filter-size-range">
+                <input id="iHeightMin" class="input xxs" type="text" placeholder="最小" />
+                <span class="sep">~</span>
+                <input id="iHeightMax" class="input xxs" type="text" placeholder="最大" />
+              </div>
             </div>
 
             <div class="fcell span8">

@@ -1002,6 +1002,7 @@ input::-webkit-inner-spin-button {
 
 .fcell.span2 { grid-column: span 2; }
 .fcell.span3 { grid-column: span 3; }
+.fcell.span4 { grid-column: span 4; }
 .fcell.span5 { grid-column: span 5; }
 .fcell.span8 { grid-column: span 8; }
 .font-box.span8 { grid-column: span 8; }
