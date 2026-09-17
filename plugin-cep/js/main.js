@@ -1699,6 +1699,7 @@
       taskEnd();
       lastOperation = { mode: "text", ids: completedIds, anchorMarked: true };
       mergeLayerSnapshots(state.layers, combined.layers);
+      renderFontFilter();
       renderList();
       if (combined.ok) markDocumentChanged();
       saveDocumentCache();
@@ -1944,6 +1945,7 @@
             renderImageList();
           } else {
             mergeLayerSnapshots(state.layers, snapshot.layers);
+            renderFontFilter();
             renderList();
           }
           saveDocumentCache();
